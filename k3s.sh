@@ -55,11 +55,17 @@ sleep 10
 ###############################################################################
 # Exit when frontend is up
 ###############################################################################
-while [ $RETRY_COUNT -le 10 ]; do
-    if kubectl get deploy/sourcegraph-frontend | grep "2/2"; then
-        exit 0
-    fi
-    ((RETRY_COUNT++))
-    sleep 10
-done
-exit 1
+RETRY_COUNT=0
+if k3s kubectl get node | grep -q "Ready"; then
+    while [ $RETRY_COUNT -le 10 ]; do
+        if kubectl get deploy/sourcegraph-frontend | grep -q "2/2"; then
+            echo "sourcegraph-frontend is ready"
+            exit 0
+        fi
+        ((RETRY_COUNT++))
+        echo "sourcegraph-frontend is not ready"
+        sleep 10
+    done
+    exit 1
+fi
+exit 0
